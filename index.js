@@ -6,7 +6,30 @@ server.use(express.json());
 
 server.listen(3131);
 
-const projeto = [{ id: "1", title: "Novo projeto", tasks: [] }];
+const projeto = [{ id: 1, title: "Novo projeto", tasks: [] }];
+
+var reqsCount = 0;
+
+//conta quantas requisições e exibe no terminal
+server.use((req, res, next) => {
+  reqsCount++;
+  console.log(`${reqsCount} requisições até o momento`);
+  return next();
+});
+
+//checa se o id existe
+function idCheck(req, res, next) {
+  const id = projeto[req.params.id];
+
+  if (!id) {
+    console.log("sem sucesso");
+    return res
+      .status(400)
+      .json({ error: `O ID ${req.params.id} não  foi encontrado` });
+  }
+  console.log("deu bom");
+  return next();
+}
 
 //home ou teste
 server.get("/", (req, res) => {
@@ -26,7 +49,7 @@ server.post("/projects", (req, res) => {
 
 //altera titulo conforme id
 
-server.put("/projects/:id", (req, res) => {
+server.put("/projects/:id", idCheck, (req, res) => {
   const { id } = req.params;
   const { title } = req.body;
 
@@ -37,13 +60,16 @@ server.put("/projects/:id", (req, res) => {
 
 //exclui projeto
 
-server.delete("/projects/:id", (req, res) => {
+server.delete("/projects/:id", idCheck, (req, res) => {
   const { id } = req.params;
+
   projeto.splice(id, 1);
+
   return res.json(projeto);
 });
 
-server.post("/projects/:id/tasks", (req, res) => {
+//add tarefas
+server.post("/projects/:id/tasks", idCheck, (req, res) => {
   const { id } = req.params;
   const { title } = req.body;
 
